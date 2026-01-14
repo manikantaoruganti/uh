@@ -1,71 +1,48 @@
 import type { Express } from "express";
 import type { Server } from "http";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// Mock data for regions with ADI scores
-const REGIONS = [
-  "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
-  "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka",
-  "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur", "Meghalaya",
-  "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan", "Sikkim",
-  "Tamil Nadu", "Telangana", "Tripura", "Uttarakhand", "Uttar Pradesh",
-  "West Bengal", "Chandigarh", "Delhi", "Puducherry", "Ladakh"
-];
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const dataDir = path.join(__dirname, "..", "data");
 
-interface AdiScore {
-  district: string;
-  state: string;
-  adiScore: number;
-  updateCount: number;
-  populationEstimate: number;
-  latitude: number;
-  longitude: number;
-}
+// Cache for loaded CSV data
+let cachedScores: any[] | null = null;
+let cachedPatterns: any[] | null = null;
 
-interface RegionData {
-  state: string;
-  totalUpdates: number;
-  avgScore: number;
-  highDriftZones: number;
-}
-
-// Generate mock ADI scores for districts
-function generateMockAdiScores(): AdiScore[] {
-  const scores: AdiScore[] = [];
-  const districtNames = [
-    "Bangalore", "Hyderabad", "Chennai", "Mumbai", "Delhi", "Kolkata",
-    "Pune", "Jaipur", "Lucknow", "Kanpur", "Ahmedabad", "Surat",
-    "Calcutta", "Coimbatore", "Visakhapatnam", "Indore", "Thane",
-    "Nagpur", "Bhopal", "Vadodara", "Ghaziabad", "Ludhiana", "Patna",
-    "Srinagar", "Ranchi", "Erode", "Aurangabad", "Dhanbad"
-  ];
-
-  REGIONS.forEach((region, index) => {
-    const numDistricts = 3 + Math.floor(Math.random() * 5);
-    for (let i = 0; i < numDistricts; i++) {
-      const districtName = districtNames[(index + i) % districtNames.length];
-      scores.push({
-        district: `${districtName}-${region}`,
-        state: region,
-        adiScore: Math.random() * 0.95,
-        updateCount: Math.floor(Math.random() * 500000) + 10000,
-        populationEstimate: Math.floor(Math.random() * 5000000) + 100000,
-        latitude: 8 + Math.random() * 30,
-        longitude: 68 + Math.random() * 32
-      });
-    }
-  });
-
-  return scores;
-}
-
-// Generate regional summary data
-function generateRegionData(): RegionData[] {
-  return REGIONS.map(region => ({
-    state: region,
-    totalUpdates: Math.floor(Math.random() * 1000000) + 50000,
-    avgScore: Math.random() * 0.8,
-    highDriftZones: Math.floor(Math.random() * 15) + 1
-  }));
+// Load CSV data files
+function loadCsvData() {
+  try {
+    if (cachedScores) return cachedScores;
+    
+    const csvFiles = fs.readdirSync(dataDir).filter(f => f.endsWith('.csv'));
+    const allScores: any[] = [];
+    
+    csvFiles.forEach(file => {
+      const filePath = path.join(dataDir, file);
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const lines = content.trim().split('\n');
+      const headers = lines[0].split(',').map(h => h.trim());
+      
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim());
+        const row: any = {};
+        headers.forEach((header, idx) => {
+          const value = values[idx];
+          // Try to convert to number if possible
+          row[header] = isNaN(Number(value)) ? value : Number(value);
+        });
+        allScores.push(row);
+      }
+    });
+    
+    cachedScores = allScores;
+    return allScores;
+  } catch (error) {
+    console.error('Error loading CSV data:', error);
+    return [];
+  }
 }
 
 export async function registerRoutes(
@@ -77,71 +54,68 @@ export async function registerRoutes(
     res.json({ status: "ok" });
   });
 
-  // Get all regions
-  app.get("/api/regions", (req, res) => {
-    res.json({
-      regions: REGIONS,
-      totalRegions: REGIONS.length
-    });
-  });
-
-  // Get ADI scores for all districts
+  // Get ADI scores for all districts from CSV
   app.get("/api/adi/get", (req, res) => {
-    const scores = generateMockAdiScores();
+    const scores = loadCsvData();
     res.json({
       responses: [scores]
     });
   });
 
-  // Get region-level aggregated data
-  app.get("/api/adi/get/path", (req, res) => {
-    const regionData = generateRegionData();
-    res.json({ responses: [regionData] });
+  // Get regions list extracted from data
+  app.get("/api/regions", (req, res) => {
+    const scores = loadCsvData();
+    const regions = [...new Set(scores.map((s: any) => s.state || s.district || s.region).filter(Boolean))];
+    res.json({
+      regions,
+      totalRegions: regions.length
+    });
   });
 
   // Get detailed region profile
   app.get("/api/region/profile", (req, res) => {
-    const region = req.query.state || "Andhra Pradesh";
-    const scores = generateMockAdiScores()
-      .filter(s => s.state === region);
+    const regionName = req.query.state || '';
+    const scores = loadCsvData();
+    const regionScores = scores.filter((s: any) => 
+      (s.state === regionName || s.region === regionName || s.district?.includes(regionName))
+    );
     
+    const avgScore = regionScores.length > 0 
+      ? regionScores.reduce((sum: number, s: any) => sum + (s.adiScore || s.drift || 0), 0) / regionScores.length
+      : 0;
+
     res.json({
-      region,
-      totalDistricts: scores.length,
-      avgAdiScore: scores.reduce((sum, s) => sum + s.adiScore, 0) / scores.length || 0,
-      topDriftZones: scores
-        .sort((a, b) => b.adiScore - a.adiScore)
-        .slice(0, 5),
-      data: scores
+      region: regionName,
+      totalDistricts: regionScores.length,
+      avgAdiScore: avgScore,
+      topDriftZones: regionScores.slice(0, 5),
+      data: regionScores
     });
   });
 
-  // Get pattern data
+  // Get pattern data - analyze from actual data
   app.get("/api/patterns/get", (req, res) => {
+    const scores = loadCsvData();
+    
+    // Analyze patterns from real data
     const patterns = [
       {
-        pattern: "Urban Migration",
-        regions: 12,
+        pattern: "High Drift Zones",
+        regions: scores.filter((s: any) => (s.adiScore || s.drift || 0) > 0.7).length,
         severity: "high",
-        description: "Significant movement to urban centers"
+        description: "Areas with significant ADI drift"
       },
       {
-        pattern: "Age Group Shift",
-        regions: 8,
+        pattern: "Moderate Drift Zones",
+        regions: scores.filter((s: any) => (s.adiScore || s.drift || 0) > 0.4 && (s.adiScore || s.drift || 0) <= 0.7).length,
         severity: "moderate",
-        description: "Unusual age distribution changes"
+        description: "Areas with moderate ADI drift"
       },
       {
-        pattern: "Biometric Surge",
-        regions: 5,
-        severity: "high",
-        description: "Unusual increase in biometric updates"
-      },
-      {
-        pattern: "Gender Ratio Anomaly",
-        regions: 3,
+        pattern: "Stable Zones",
+        regions: scores.filter((s: any) => (s.adiScore || s.drift || 0) <= 0.4).length,
         severity: "low",
-        description: "Deviation from expected gender distribution"
+        description: "Stable regions with low drift"
       }
     ];
     res.json({ responses: [patterns] });
