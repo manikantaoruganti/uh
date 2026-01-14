@@ -27,7 +27,7 @@ function loadCsvData() {
     // Check if directory exists
     if (!fs.existsSync(dataDir)) {
       console.error(
-        `[CSV Loader] ERROR: Data directory not found at ${dataDir}. Make sure /data folder exists in project root."
+        `[CSV Loader] ERROR: Data directory not found at ${dataDir}. Make sure /data folder exists in project root.`
       );
       return [];
     }
@@ -104,10 +104,10 @@ function loadCsvData() {
     });
 
     console.log(
-      `[CSV Loader] ✅ Successfully loaded data from ${filesProcessed}/${csvFiles.length} files`
+      `[CSV Loader] Successfully loaded data from ${filesProcessed}/${csvFiles.length} files`
     );
     console.log(
-      `[CSV Loader] ✅ Total records loaded: ${allScores.length}`
+      `[CSV Loader] Total records loaded: ${allScores.length}`
     );
 
     cachedScores = allScores;
