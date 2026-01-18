@@ -23,7 +23,7 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install deps
+      - name: Install dependencies
         run: npm install
 
       - name: Build
@@ -38,5 +38,5 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy
+      - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v4
