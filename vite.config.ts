@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig({
-  base: "/uh/",   // 🔴 REQUIRED for GitHub Pages subpath
+  base: "/uh/",   // <<< ADD THIS LINE
   plugins: [react()],
   resolve: {
     alias: {
