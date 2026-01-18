@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useHashLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,8 +10,10 @@ import RegionProfile from "@/pages/RegionProfile";
 import Patterns from "@/pages/Patterns";
 
 function Router() {
+  const [location] = useHashLocation();
+
   return (
-    <Switch>
+    <Switch location={location}>
       <Route path="/" component={Home} />
       <Route path="/map" component={MapPage} />
       <Route path="/region" component={RegionProfile} />
