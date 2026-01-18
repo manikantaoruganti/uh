@@ -2,8 +2,6 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
-import { createProxyMiddleware } from "http-proxy-middleware";
-
 const app = express();
 const httpServer = createServer(app);
 
@@ -17,16 +15,7 @@ app.use(
 );
 app.use(express.urlencoded({ extended: false }));
 
-// ---------- PROXY TO FASTAPI ----------
-// Every /api/* call from frontend → FastAPI at 8000
-app.use(
-  "/api",
-  createProxyMiddleware({
-    target: "http://127.0.0.1:8000",
-    changeOrigin: true,
-    logLevel: "debug",
-  })
-);
+
 
 // ---------- LOGGER ----------
 export function log(message: string, source = "express") {
