@@ -143,7 +143,7 @@ from datetime import datetime
 # ================= CONFIG =================
 W1, W2, W3, W4 = 0.25, 0.25, 0.25, 0.25
 
-DATA_DIR = r"data"
+DATA_DIR = "data"
 OUTPUT_DIR = "output"
 JSON_DIR = os.path.join(OUTPUT_DIR, "json")
 
