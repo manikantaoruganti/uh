@@ -68,13 +68,17 @@
 // }
 import { useQuery } from "@tanstack/react-query";
 
+const API_BASE =
+  import.meta.env.VITE_API_BASE || ""; 
+// "" = localhost proxy, otherwise live backend
+
 // --- Regions ---
 export function useRegions() {
   return useQuery({
-    queryKey: ["/api/regions"],
-    staleTime: 5 * 60 * 1000, // cache 5 min
+    queryKey: ["regions"],
+    staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      const res = await fetch("/api/regions");
+      const res = await fetch(`${API_BASE}/api/regions`);
       if (!res.ok) throw new Error("Failed to fetch regions");
       return await res.json();
     },
@@ -83,14 +87,14 @@ export function useRegions() {
 
 // --- ADI Scores ---
 export function useAdiScores(filters?: { state?: string; district?: string; pincode?: string }) {
-  const queryKey = ["/api/adi", filters?.state || "all", filters?.district || "all", filters?.pincode || "all"];
+  const queryKey = ["adi", filters?.state || "all", filters?.district || "all", filters?.pincode || "all"];
 
   return useQuery({
     queryKey,
     staleTime: 60 * 1000,
     keepPreviousData: true,
     queryFn: async () => {
-      const url = new URL("/api/adi", window.location.origin);
+      const url = new URL(`${API_BASE}/api/adi`, window.location.origin);
       if (filters?.state) url.searchParams.set("state", filters.state);
       if (filters?.district) url.searchParams.set("district", filters.district);
       if (filters?.pincode) url.searchParams.set("pincode", filters.pincode);
@@ -106,11 +110,11 @@ export function useAdiScores(filters?: { state?: string; district?: string; pinc
 // --- Timeline Data ---
 export function useTimeline(filters: { state?: string; district?: string; pincode?: string }) {
   return useQuery({
-    queryKey: ["/api/timeline", filters.state || "all", filters.district || "all", filters.pincode || "all"],
+    queryKey: ["timeline", filters.state || "all", filters.district || "all", filters.pincode || "all"],
     enabled: Boolean(filters.state || filters.district || filters.pincode),
     staleTime: 30 * 1000,
     queryFn: async () => {
-      const url = new URL("/api/timeline", window.location.origin);
+      const url = new URL(`${API_BASE}/api/timeline`, window.location.origin);
       if (filters.state) url.searchParams.set("state", filters.state);
       if (filters.district) url.searchParams.set("district", filters.district);
       if (filters.pincode) url.searchParams.set("pincode", filters.pincode);
@@ -126,10 +130,10 @@ export function useTimeline(filters: { state?: string; district?: string; pincod
 // --- Patterns ---
 export function usePatterns(type: "migration" | "transition" | "instability") {
   return useQuery({
-    queryKey: ["/api/patterns", type],
+    queryKey: ["patterns", type],
     staleTime: 60 * 1000,
     queryFn: async () => {
-      const res = await fetch(`/api/patterns/${type}`);
+      const res = await fetch(`${API_BASE}/api/patterns/${type}`);
       if (!res.ok) throw new Error(`Failed to fetch ${type} patterns`);
       const data = await res.json();
       return Array.isArray(data) ? data : [];
