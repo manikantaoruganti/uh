@@ -62,9 +62,14 @@ To generate a static version of the frontend:
 - `shared/`: Shared types/schemas.
 - `data/`: Input CSV files.
 - `output/`: Processed data (CSVs and JSONs).
-## LIVE URL
-- FOR PREVIEW VISIT :  `https://gleaming-douhua-b0837a.netlify.app/`
-- FOR FRONTNED OVERVIEW VISIT : `https://uh-git-main-manis-projects-4c168198.vercel.app/`
+## 🔗 Live URLs
+
+- 🌐 Full Preview (Netlify):  
+  https://gleaming-douhua-b0837a.netlify.app/
+
+- 🎨 Frontend UI Only (Vercel):  
+  https://uh-git-main-manis-projects-4c168198.vercel.app/
+
 
 
 ## 📸 Screenshots
