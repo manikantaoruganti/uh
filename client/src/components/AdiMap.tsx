@@ -134,14 +134,6 @@ export function AdiMap() {
   const center: [number, number] = [20.5937, 78.9629];
   const zoom = 5;
 
-  if (isLoading) {
-    return (
-      <div className="w-full h-[500px] rounded-xl bg-muted/30 animate-pulse flex items-center justify-center border border-border">
-        <div className="text-muted-foreground font-medium">Loading Map Data...</div>
-      </div>
-    );
-  }
-
   // ---- FIX: ADI is 0–100, not 0–1 ----
   const getColor = (score: number) => {
     if (score > 70) return "#ef4444";
@@ -170,8 +162,17 @@ export function AdiMap() {
     if (!scores) return [];
     return scores
       .filter(s => typeof s.adiScore === "number" && !isNaN(s.adiScore))
-      .slice(0, 1500); // limit to avoid freeze
+      .slice(0, 1500);
   }, [scores]);
+
+  // NOW you can return conditionally
+  if (isLoading) {
+    return (
+      <div className="w-full h-[500px] rounded-xl bg-muted/30 animate-pulse flex items-center justify-center border border-border">
+        <div className="text-muted-foreground font-medium">Loading Map Data...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-xl overflow-hidden border border-border shadow-md h-[600px] bg-white relative z-0">
@@ -214,7 +215,6 @@ export function AdiMap() {
         })}
       </MapContainer>
 
-      {/* Legend */}
       <div className="absolute bottom-6 right-6 bg-white/90 backdrop-blur border border-border p-4 rounded-lg shadow-lg z-[1000] text-xs">
         <h4 className="font-bold mb-2">Drift Intensity</h4>
         <div className="space-y-2">
