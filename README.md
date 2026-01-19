@@ -63,6 +63,6 @@ To generate a static version of the frontend:
 - `data/`: Input CSV files.
 - `output/`: Processed data (CSVs and JSONs).
 ## LIVE URL
-FOR PREVIEW VISIT :  
+FOR PREVIEW VISIT :  https://gleaming-douhua-b0837a.netlify.app/
 
 
