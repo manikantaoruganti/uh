@@ -191,7 +191,7 @@ async def startup():
     except Exception as e:
         print("Startup load failed:", e)
 
-# -------- API ROUTES --------
+
 
 @app.get("/api/regions")
 def regions():
