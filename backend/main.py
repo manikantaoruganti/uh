@@ -152,7 +152,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import os
 from typing import Optional
-from .adi_pipeline import process_data, OUTPUT_DIR
+from adi_pipeline import process_data, OUTPUT_DIR
 
 app = FastAPI()
 
