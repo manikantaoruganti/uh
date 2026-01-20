@@ -134,38 +134,25 @@ export function AdiMap() {
   const center: [number, number] = [20.5937, 78.9629];
   const zoom = 5;
 
-  // ---- FIX: ADI is 0–100, not 0–1 ----
   const getColor = (score: number) => {
     if (score > 70) return "#ef4444";
     if (score > 40) return "#f97316";
     return "#22c55e";
   };
 
-  // ---- Same pseudo coords, but stable ----
-  const getPseudoCoords = (state: string, district: string): [number, number] => {
-    const hash = (str: string) => {
-      let h = 0;
-      for (let i = 0; i < str.length; i++) h = Math.imul(31, h) + str.charCodeAt(i) | 0;
-      return h;
-    };
-    const latBase = 22;
-    const lngBase = 79;
-    const h = Math.abs(hash(state + district));
-    return [
-      latBase + (h % 1000) / 100 - 5,
-      lngBase + ((h / 1000) % 1000) / 100 - 5,
-    ];
-  };
-
-  // ---- FIX: limit heavy rendering ----
   const safeScores = useMemo(() => {
     if (!scores) return [];
     return scores
-      .filter(s => typeof s.adiScore === "number" && !isNaN(s.adiScore))
+      .filter(
+        s =>
+          typeof s.adiScore === "number" &&
+          !isNaN(s.adiScore) &&
+          typeof s.lat === "number" &&
+          typeof s.lng === "number"
+      )
       .slice(0, 1500);
   }, [scores]);
 
-  // NOW you can return conditionally
   if (isLoading) {
     return (
       <div className="w-full h-[500px] rounded-xl bg-muted/30 animate-pulse flex items-center justify-center border border-border">
@@ -178,12 +165,12 @@ export function AdiMap() {
     <div className="rounded-xl overflow-hidden border border-border shadow-md h-[600px] bg-white relative z-0">
       <MapContainer center={center} zoom={zoom} scrollWheelZoom={false} className="h-full w-full">
         <TileLayer
-          attribution='&copy; OpenStreetMap contributors'
+          attribution="&copy; OpenStreetMap contributors"
           url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
         />
 
         {safeScores.map((item, idx) => {
-          const coords = getPseudoCoords(item.state, item.district);
+          const coords: [number, number] = [item.lat, item.lng];
           const score = Number(item.adiScore) || 0;
 
           return (

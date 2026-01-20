@@ -219,6 +219,18 @@ def process_data():
     master_df = enrol_agg.merge(demo_agg, how='outer', on=['state','district','pincode','date']).fillna(0)
     master_df = master_df.merge(bio_agg, how='outer', on=['state','district','pincode','date']).fillna(0)
 
+    # ===== ADD REAL PINCODE COORDS (NEW) =====
+    coords_path = os.path.join(DATA_DIR, "pincode_coords.csv")
+    if os.path.exists(coords_path):
+        coords = pd.read_csv(coords_path)
+        coords["pincode"] = coords["pincode"].astype(str)
+        master_df["pincode"] = master_df["pincode"].astype(str)
+        master_df = master_df.merge(coords, on="pincode", how="left")
+    else:
+        master_df["lat"] = 0
+        master_df["lng"] = 0
+    # ========================================
+
     grouped = master_df.groupby(['state','district','pincode'])
 
     master_df['enrolment_dev'] = (
@@ -253,10 +265,7 @@ def process_data():
 
     master_df['adi_score_normalized'] = (master_df['adi_score'] / max_adi) * 100
 
-    # -------- FIX: remove NaN and inf --------
-    master_df = master_df.replace([np.inf, -np.inf], np.nan)
-    master_df = master_df.fillna(0)
-    # ----------------------------------------
+    master_df = master_df.replace([np.inf, -np.inf], np.nan).fillna(0)
 
     master_df.to_csv(os.path.join(OUTPUT_DIR, "adi_scores.csv"), index=False)
 
@@ -264,7 +273,7 @@ def process_data():
     json.dump(regions, open(os.path.join(JSON_DIR,"regions.json"),"w"))
 
     latest = master_df.sort_values('date').groupby(['state','district','pincode']).last().reset_index()
-    adi_json = latest[['state','district','pincode','adi_score_normalized','enrolment_dev','demographic_dev','biometric_dev','age_shift']].to_dict(orient='records')
+    adi_json = latest[['state','district','pincode','adi_score_normalized','enrolment_dev','demographic_dev','biometric_dev','age_shift','lat','lng']].to_dict(orient='records')
     json.dump(adi_json, open(os.path.join(JSON_DIR,"adi.json"),"w"))
 
     return master_df

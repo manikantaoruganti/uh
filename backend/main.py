@@ -184,12 +184,18 @@ def get_data():
     data_cache = df
     return df
 
-@app.on_event("startup")
-async def startup():
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
     try:
         get_data()
     except Exception as e:
         print("Startup load failed:", e)
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
 
 
 
