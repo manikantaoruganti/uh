@@ -225,14 +225,17 @@ def adi(state: Optional[str]=None, district: Optional[str]=None, pincode: Option
     latest['date'] = latest['date'].dt.strftime('%Y-%m-%d')
 
     return latest[
-        ['state','district','pincode','adi_score_normalized','enrolment_dev','demographic_dev','biometric_dev','age_shift']
-    ].rename(columns={
-        'adi_score_normalized':'adiScore',
-        'enrolment_dev':'enrolmentDev',
-        'demographic_dev':'demographicDev',
-        'biometric_dev':'biometricDev',
-        'age_shift':'ageShift'
-    }).fillna(0).to_dict(orient='records')
+  ['state','district','pincode','lat','lng',
+   'adi_score_normalized','enrolment_dev',
+   'demographic_dev','biometric_dev','age_shift']
+].rename(columns={
+   'adi_score_normalized':'adiScore',
+   'enrolment_dev':'enrolmentDev',
+   'demographic_dev':'demographicDev',
+   'biometric_dev':'biometricDev',
+   'age_shift':'ageShift'
+}).fillna(0).to_dict(orient='records')
+
 
 @app.get("/api/timeline")
 def timeline(state: str=None, district: str=None, pincode: str=None):
