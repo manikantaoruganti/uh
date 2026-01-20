@@ -179,9 +179,7 @@ def get_data():
     else:
         df = process_data()
 
-    # --- FIX: clean bad numbers ---
     df = df.replace([float("inf"), float("-inf")], pd.NA).fillna(0)
-    # ------------------------------
 
     data_cache = df
     return df
@@ -208,7 +206,7 @@ def adi(state: Optional[str]=None, district: Optional[str]=None, pincode: Option
     if df.empty:
         return []
 
-    mask = pd.Series(True, index=df.index, dtype=bool)  # FIX dtype
+    mask = pd.Series(True, index=df.index, dtype=bool)
     if state: mask &= df['state']==state
     if district: mask &= df['district']==district
     if pincode: mask &= df['pincode']==str(pincode)
@@ -236,7 +234,7 @@ def timeline(state: str=None, district: str=None, pincode: str=None):
     if df.empty:
         return []
 
-    mask = pd.Series(True, index=df.index, dtype=bool)  # FIX dtype
+    mask = pd.Series(True, index=df.index, dtype=bool)
     if state: mask &= df['state']==state
     if district: mask &= df['district']==district
     if pincode: mask &= df['pincode']==str(pincode)
@@ -245,7 +243,7 @@ def timeline(state: str=None, district: str=None, pincode: str=None):
     for _, r in df[mask].sort_values('date').iterrows():
         if pd.isna(r['date']):
             continue
-        try:  # --- FIX: prevent JSON crash ---
+        try:
             d = r['date'].strftime('%Y-%m-%d')
             rows.append({"date":d,"value":float(r.get('adi_score_normalized',0)),"metric":"ADI"})
             rows.append({"date":d,"value":float(r.get('total_enrolment',0)),"metric":"Enrolment"})
@@ -281,6 +279,21 @@ def patterns(ptype: str):
                 "region":{"state":r['state'],"district":r['district'],"pincode":r['pincode']},
                 "confidence":min(abs(float(r['enrolment_dev'])),1.0),
                 "description":f"High enrolment deviation: {r['enrolment_dev']:.2f}"
+            })
+
+    # ---- ADDED: DEMOGRAPHIC TRANSITION ----
+    if ptype=="transition":
+        top = latest[
+            (latest["age_shift"] > latest["age_shift"].mean()) &
+            (latest["biometric_dev"].abs() > latest["biometric_dev"].std())
+        ].nlargest(10, "age_shift")
+
+        for _, r in top.iterrows():
+            out.append({
+                "type":"transition",
+                "region":{"state":r['state'],"district":r['district'],"pincode":r['pincode']},
+                "confidence":min(float(r["age_shift"]),1.0),
+                "description":f"Age transition with biometric activity: {r['age_shift']:.2f}"
             })
 
     return out
