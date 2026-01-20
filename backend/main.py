@@ -158,10 +158,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://gleaming-douhua-b0837a.netlify.app",
-        "https://uh-git-main-manis-projects-4c168198.vercel.app",
-        "http://localhost:5000",
-        "http://localhost:5173",],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
