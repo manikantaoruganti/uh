@@ -4,16 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import os
 from typing import Optional
-from adi_pipeline import process_data, OUTPUT_DIR
+from backend.adi_pipeline import process_data, OUTPUT_DIR
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5000",
-        "https://gleaming-douhua-b0837a.netlify.app"
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -179,3 +176,6 @@ def legacy_patterns(ptype: str):
 @app.get("/timeline")
 def legacy_timeline(state: str=None, district: str=None, pincode: str=None):
     return timeline(state, district, pincode)
+@app.get("/cors-test")
+def cors_test():
+    return {"ok": True}
