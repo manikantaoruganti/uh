@@ -191,7 +191,7 @@ from contextlib import asynccontextmanager
 import pandas as pd
 import os
 from typing import Optional
-from backend.adi_pipeline import process_data, OUTPUT_DIR
+from adi_pipeline import process_data, OUTPUT_DIR
 
 # -------- DATA CACHE --------
 data_cache = None
