@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import os
 from typing import Optional
-from backend.adi_pipeline import process_data, OUTPUT_DIR
+from adi_pipeline import process_data, OUTPUT_DIR
 
 app = FastAPI()
 
@@ -13,7 +13,9 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5000",
         "http://localhost:5173",
-        "https://uh-git-main-manis-projects-4c168198.vercel.app"
+        "https://uh-git-main-manis-projects-4c168198.vercel.app",
+        "https://gleaming-douhua-b0837a.netlify.app/",
+        "*"
     ],
     allow_credentials=True,
     allow_methods=["*"],
